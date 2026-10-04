@@ -218,9 +218,33 @@ def generate_report(report_id):
 
 
 @app.post("/reports", status_code=201)
-def create_report():
+def create_report(force: bool = False):
     conn = sqlite3.connect(DB_NAME)
     cursor = conn.cursor()
+
+    today = datetime.now().strftime("%Y-%m-%d")
+
+    if not force:
+        cursor.execute("""
+            SELECT id
+            FROM reports
+            WHERE date(created_at) = ?
+            ORDER BY id DESC
+            LIMIT 1
+        """, (today,))
+
+        existing = cursor.fetchone()
+
+        if existing:
+            report_id = existing[0]
+            conn.close()
+
+            from fastapi import Response
+            return Response(
+                content=f'{{"id": {report_id}, "file": "/reports/{report_id}/file"}}',
+                media_type="application/json",
+                status_code=200
+            )
 
     cursor.execute("""
         INSERT INTO reports (path, created_at)
