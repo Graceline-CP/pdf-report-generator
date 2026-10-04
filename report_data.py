@@ -43,13 +43,21 @@ def getReportData():
     """)
     orders_per_day = [dict(row) for row in cursor.fetchall()]
 
+    cursor.execute("""
+        SELECT *
+        FROM orders
+        ORDER BY created_at DESC, id DESC
+    """)
+    all_orders = [dict(row) for row in cursor.fetchall()]
+
     conn.close()
 
     return {
         "total_orders": total_orders,
         "total_revenue": total_revenue,
         "top_products": top_products,
-        "orders_per_day": orders_per_day
+        "orders_per_day": orders_per_day,
+        "all_orders": all_orders
     }
 
 
